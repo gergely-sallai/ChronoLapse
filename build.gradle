@@ -1,0 +1,13 @@
+subprojects {
+    version = '0.1'
+    apply plugin: 'java'
+    compileJava.sourceCompatibility = 1.7
+
+    repositories {
+        mavenCentral()
+        maven {
+            url "http://xuggle.googlecode.com/svn/trunk/repo/share/java/"
+        }
+    }
+}
+
