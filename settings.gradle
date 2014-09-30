@@ -3,3 +3,5 @@ rootProject.name = 'ChronoLapse'
 include ':chronolapse-lib'
 include ':chronolapse-tui'
 
+include 'chronolapse-gui'
+
