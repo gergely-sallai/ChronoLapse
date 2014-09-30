@@ -1,11 +1,16 @@
 package gergelysallai.app.chronolapse.gui;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import gergelysallai.app.chronolapse.ProgressUpdateListener;
 import gergelysallai.app.chronolapse.media.*;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +28,10 @@ public class MainGUI extends JFrame {
     private JButton GOButton;
     private JTextField pathField;
     private JButton folderButton;
+    private JLabel label1;
+    private JProgressBar progressBarEncoder;
+    private JProgressBar progressBarImageLoader;
+    private final SettableFuture<Void> encodingCompleted = SettableFuture.create();
 
     private static final Logger logger = LoggerFactory.getLogger(MainGUI.class.getName());
 
@@ -58,16 +67,28 @@ public class MainGUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 logger.info("StartMagic: " + pathField.getText());
-                //StartMagic(chooser.getSelectedFile().getAbsolutePath());
+                StartMagic(pathField.getText());
             }
         });
-
-
         setVisible(true);
     }
 
 
     public void StartMagic(String rootDir) {
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        Futures.addCallback(encodingCompleted, new FutureCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                logger.info("executor shutdown");
+                executor.shutdown();
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                executor.shutdown();
+            }
+        });
+
         File file = new File(rootDir);
         ImageSelector.ImageType imageType = ImageSelector.ImageType.JPG;
         ImageSize imageSize = new ImageSize(1280, 720);
@@ -76,6 +97,7 @@ public class MainGUI extends JFrame {
             @Override
             public void onProgressUpdate(float percentCompleted) {
                 logger.info(String.format("Images loaded and scaled: %.2f", percentCompleted));
+                progressBarImageLoader.setValue((int) percentCompleted);
             }
 
             @Override
@@ -87,14 +109,16 @@ public class MainGUI extends JFrame {
             @Override
             public void onProgressUpdate(float percentCompleted) {
                 logger.info(String.format("Encoding progress: %.2f", percentCompleted));
+                progressBarEncoder.setValue((int) percentCompleted);
             }
 
             @Override
             public void onCompleted() {
                 logger.info("Encoding completed");
+                encodingCompleted.set(null);
             }
         };
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+
 
         ImageSelector imageSelector = new ImageSelector(new Comparators.FileDateAscending());
         Collection<File> images = imageSelector.getFiles(file, imageType);
@@ -116,12 +140,6 @@ public class MainGUI extends JFrame {
         VideoCreator videoCreator = new VideoCreator(videoFile, imageSize, VideoCreator.FrameRate.FPS25, imageLoader, progressUpdateHandler);
         videoCreator.start();
 
-        try {
-            videoCreator.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        executor.shutdown();
         logger.info("Everything completed, shutting down. Video file: {}", videoFile);
     }
 
