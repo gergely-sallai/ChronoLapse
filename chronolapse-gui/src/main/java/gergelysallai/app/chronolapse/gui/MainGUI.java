@@ -34,6 +34,7 @@ public class MainGUI extends JFrame {
     private JLabel outputFilename;
     private JCheckBox dateCheckBox;
     private JCheckBox timeCheckBox;
+    private JLabel labelFileExists;
     private final SettableFuture<Void> encodingCompleted = SettableFuture.create();
 
     private static final Logger logger = LoggerFactory.getLogger(MainGUI.class.getName());
@@ -73,7 +74,7 @@ public class MainGUI extends JFrame {
         GOButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                logger.info(String.format("StartMagic: %s/%s",  pathField.getText(),outputFilename.getText() ));
+                logger.info(String.format("StartMagic: %s/%s", pathField.getText(), outputFilename.getText()));
                 StartMagic( pathField.getText(), outputFilename.getText());
             }
         });
@@ -124,6 +125,21 @@ public class MainGUI extends JFrame {
         }
         filename += ".mp4";
         outputFilename.setText(filename);
+
+        checkFileExists();
+    }
+
+    public void checkFileExists() {
+
+        String filePathString = String.format("%s%s%s",  pathField.getText(),File.separator, outputFilename.getText());
+        File f = new File(filePathString);
+        if(f.exists() && !f.isDirectory()) {
+            logger.warn("file exists");
+            labelFileExists.setVisible(true);
+
+        } else {
+            labelFileExists.setVisible(false);
+        }
     }
 
 
