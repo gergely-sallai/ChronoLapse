@@ -8,6 +8,7 @@ import gergelysallai.app.chronolapse.ProgressUpdateListener;
 import gergelysallai.app.chronolapse.media.*;
 
 import javax.swing.*;
+import javax.swing.event.ListDataListener;
 import java.awt.event.*;
 
 import org.slf4j.Logger;
@@ -35,7 +36,9 @@ public class MainGUI extends JFrame {
     private JCheckBox dateCheckBox;
     private JCheckBox timeCheckBox;
     private JLabel labelFileExists;
+    private JComboBox comboBoxResolution;
     private final SettableFuture<Void> encodingCompleted = SettableFuture.create();
+    ResolutionModel resolutionModel = new ResolutionModel();
 
     private static final Logger logger = LoggerFactory.getLogger(MainGUI.class.getName());
 
@@ -75,7 +78,10 @@ public class MainGUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 logger.info(String.format("StartMagic: %s/%s", pathField.getText(), outputFilename.getText()));
-                StartMagic( pathField.getText(), outputFilename.getText());
+                Resolution res = resolutionModel.getSelectedResolution();
+                logger.info(String.format("resolution: %s x %s", res.width, res.height));
+
+                StartMagic( pathField.getText(), outputFilename.getText(), res);
             }
         });
 
@@ -105,10 +111,14 @@ public class MainGUI extends JFrame {
             }
         });
 
+        comboBoxResolution.setModel(resolutionModel);
 
         updateOutputFilename();
         setVisible(true);
     }
+
+
+
 
     public void updateOutputFilename() {
         final DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
@@ -144,7 +154,7 @@ public class MainGUI extends JFrame {
 
 
 
-    public void StartMagic(String rootDir, String filename) {
+    public void StartMagic(String rootDir, String filename, Resolution res) {
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         Futures.addCallback(encodingCompleted, new FutureCallback<Void>() {
             @Override
@@ -161,7 +171,7 @@ public class MainGUI extends JFrame {
 
         File file = new File(rootDir);
         ImageSelector.ImageType imageType = ImageSelector.ImageType.JPG;
-        ImageSize imageSize = new ImageSize(1280, 720);
+        ImageSize imageSize = new ImageSize(res.width, res.height);
 
         ProgressUpdateListener imageLoaderListener = new ProgressUpdateListener() {
             @Override
