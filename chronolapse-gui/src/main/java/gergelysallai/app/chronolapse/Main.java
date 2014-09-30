@@ -1,4 +1,5 @@
 package gergelysallai.app.chronolapse;
+import gergelysallai.app.chronolapse.gui.MainGUI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,5 +9,8 @@ public class Main {
 
     public static void main(String[] args) {
         logger.info("Main");
+        MainGUI mainUI = new MainGUI();
+
+
     }
 }
