@@ -8,8 +8,7 @@ import gergelysallai.app.chronolapse.ProgressUpdateListener;
 import gergelysallai.app.chronolapse.media.*;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +30,10 @@ public class MainGUI extends JFrame {
     private JLabel label1;
     private JProgressBar progressBarEncoder;
     private JProgressBar progressBarImageLoader;
+    private JTextField textFieldOutputFilename;
+    private JLabel outputFilename;
+    private JCheckBox dateCheckBox;
+    private JCheckBox timeCheckBox;
     private final SettableFuture<Void> encodingCompleted = SettableFuture.create();
 
     private static final Logger logger = LoggerFactory.getLogger(MainGUI.class.getName());
@@ -56,6 +59,10 @@ public class MainGUI extends JFrame {
                     logger.info("You chose to open this file: " +
                             chooser.getSelectedFile().getAbsolutePath());
                     pathField.setText(chooser.getSelectedFile().getAbsolutePath());
+                    if(textFieldOutputFilename.getText().equals("")) {
+                        textFieldOutputFilename.setText(chooser.getSelectedFile().getName());
+                    }
+                    updateOutputFilename();
                 } else {
                     logger.info("ERROR");
                 }
@@ -66,15 +73,62 @@ public class MainGUI extends JFrame {
         GOButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                logger.info("StartMagic: " + pathField.getText());
-                StartMagic(pathField.getText());
+                logger.info(String.format("StartMagic: %s/%s",  pathField.getText(),outputFilename.getText() ));
+                StartMagic( pathField.getText(), outputFilename.getText());
             }
         });
+
+        textFieldOutputFilename.addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                updateOutputFilename();
+            }
+
+            public void keyTyped(KeyEvent e) {
+            }
+
+            public void keyPressed(KeyEvent e) {
+            }
+        });
+
+        dateCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                updateOutputFilename();
+            }
+        });
+
+        timeCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                updateOutputFilename();
+            }
+        });
+
+
+        updateOutputFilename();
         setVisible(true);
     }
 
+    public void updateOutputFilename() {
+        final DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
+        final DateFormat timeFormat = new SimpleDateFormat("HH-mm-ss");
+        final Date date = new Date();
+        //String filaname = String.format("%s-%s.mp4", textFieldOutputFilename.getText(), dateFormat.format(date));
+        String filename = textFieldOutputFilename.getText();
+        if(dateCheckBox.isSelected()) {
+            filename += "_" + dateFormat.format(date);
+        }
 
-    public void StartMagic(String rootDir) {
+        if(timeCheckBox.isSelected()) {
+            filename += "_" + timeFormat.format(date);
+        }
+        filename += ".mp4";
+        outputFilename.setText(filename);
+    }
+
+
+
+    public void StartMagic(String rootDir, String filename) {
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         Futures.addCallback(encodingCompleted, new FutureCallback<Void>() {
             @Override
@@ -133,9 +187,7 @@ public class MainGUI extends JFrame {
             path = file.getParent();
         }
 
-        final DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd HH-mm-ss");
-        final Date date = new Date();
-        final String videoFile = String.format("%s/Timelapse-%s.mp4", path, dateFormat.format(date));
+        final String videoFile = String.format("%s/%s", path, filename);
 
         VideoCreator videoCreator = new VideoCreator(videoFile, imageSize, VideoCreator.FrameRate.FPS25, imageLoader, progressUpdateHandler);
         videoCreator.start();
