@@ -6,7 +6,9 @@ public class ResolutionModel  extends AbstractListModel implements ComboBoxModel
 
     Resolution[] data = {
             new Resolution("1080p",1920,1080),
-            new Resolution("720p",1280, 720)
+            new Resolution("720p",1280, 720),
+            new Resolution("4K",4096, 2160),
+            new Resolution("2K",2048, 1080)
     };
     Resolution selection = data[0];
 
