@@ -19,9 +19,11 @@ public class Comparators {
 
     public static class FileDateDescending implements Comparator<File> {
 
+        private final FileDateAscending ascendingComp = new FileDateAscending();
+
         @Override
         public int compare(File f1, File f2) {
-            return -1 * Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+            return -1 * ascendingComp.compare(f1, f2);
         }
     }
 }

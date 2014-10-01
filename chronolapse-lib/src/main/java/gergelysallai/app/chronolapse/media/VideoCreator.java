@@ -30,7 +30,6 @@ public class VideoCreator extends Thread {
 
     private final AtomicBoolean abort = new AtomicBoolean(false);
     private final AtomicBoolean running = new AtomicBoolean(false);
-    private final String name;
     private final ImageSize imageSize;
     private final FrameRate frameRate;
     private final ImageLoader imageLoader;
@@ -39,7 +38,6 @@ public class VideoCreator extends Thread {
 
     public VideoCreator(String name, ImageSize imageSize, FrameRate frameRate, ImageLoader imageLoader, ProgressUpdateHandler progressHandler) {
         super("VideoCreator");
-        this.name = name;
         this.imageSize = imageSize;
         this.frameRate = frameRate;
         this.imageLoader = imageLoader;
